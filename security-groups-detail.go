@@ -10,7 +10,7 @@ import (
   "github.com/awslabs/aws-sdk-go/gen/ec2"
 )
 
-// $B%a%$%s=hM}(B
+// メイン処理
 func main() {
 
   var (
@@ -18,69 +18,69 @@ func main() {
     region = flag.String("r","ap-northeast-1","region")
   )
 
-  // $B%3%^%s%I%i%$%s$+$i$NF~NO$r%Q!<%9(B
+  // コマンドラインからの入力をパース
   flag.Parse()
 
-  // ~/.aws/credentials $B$+$i%-!<$r<hF@(B
+  // ~/.aws/credentials からキーを取得
   duration := 60 * time.Second
   creds, err := aws.ProfileCreds("",*prefix,duration)
   if err != nil {
     fmt.Print("Error!! Please check ~/.aws/credentials")
   }
 
-  // $B<hF@$7$?%-!<$H%3%^%s%I%i%$%s$+$i$NF~NO$rMxMQ$7$F!"(BAPI$B$X@\B3(B
+  // 取得したキーとコマンドラインからの入力を利用して、APIへ接続
   cli := ec2.New(creds, *region, http.DefaultClient)
-  // aws ec2 describe-security-grroups$B$r<B9T(B
+  // aws ec2 describe-security-grroupsを実行
   resp, err := cli.DescribeSecurityGroups(nil)
 
   if err != nil {
     panic(err)
   }
 
-  // $B%;%-%e%j%F%#%0%k!<%W$N=PNO=hM}(B
+  // セキュリティグループの出力処理
   fmt.Println("GroupID,Direction,Type,Protocol,Port Range,IP Range")
-  // $B%k!<%W$rMxMQ$7$F!"%;%-%e%j%F%#%0%k!<%W0l$D$:$D$K=hM}$r<B9T$9$k(B
+  // ループを利用して、セキュリティグループ一つずつに処理を実行する
   for i := range resp.SecurityGroups {
-    // $B%k!<%W$rMxMQ$7$F!"(B1$B$D$N%;%-%e%j%F%#%0%k!<%WFb$N(Binbound$B%]%j%7!<$K=hM}$r<B9T$9$k(B
+    // ループを利用して、1つのセキュリティグループ内のinboundポリシーに処理を実行する
     if resp.SecurityGroups[i].IPPermissions != nil {
       for j := range resp.SecurityGroups[i].IPPermissions {
-        // $B%?!<%2%C%H$,(BIP$B%l%s%8$H%;%-%e%j%F%#%0%k!<%W$N$H$A$i$+%A%'%C%/!#(B
+        // ターゲットがIPレンジとセキュリティグループのとちらかチェック。
         if resp.SecurityGroups[i].IPPermissions[j].IPRanges != nil {
-          // $BAw?.85(BIP$B%"%I%l%9J,=hM}$r<B;\(B
+          // 送信元IPアドレス分処理を実施
           for k := range resp.SecurityGroups[i].IPPermissions[j].IPRanges {
             fmt.Print(*resp.SecurityGroups[i].GroupID + ",inbound,")
-            // $B%k!<%k$N>\:Y$r=PNO(B
+            // ルールの詳細を出力
             print_detail(resp.SecurityGroups[i].IPPermissions[j])
             fmt.Print(*resp.SecurityGroups[i].IPPermissions[j].IPRanges[k].CIDRIP + "\n")
           }
         } else {
-          // $BAw?.85%;%-%e%j%F%#%0%k!<%WJ,=hM}$r<B;\(B
+          // 送信元セキュリティグループ分処理を実施
           for k := range resp.SecurityGroups[i].IPPermissions[j].UserIDGroupPairs {
             fmt.Print(*resp.SecurityGroups[i].GroupID + ",inbound,")
-            // $B%k!<%k$N>\:Y$r=PNO(B
+            // ルールの詳細を出力
             print_detail(resp.SecurityGroups[i].IPPermissions[j])
             fmt.Print(*resp.SecurityGroups[i].IPPermissions[j].UserIDGroupPairs[k].GroupID + "\n")
           }
         }
       }
     }
-    // $B%k!<%W$rMxMQ$7$F!"(B1$B$D$N%;%-%e%j%F%#%0%k!<%WFb$N(Boutbound$B%]%j%7!<$K=hM}$r<B9T$9$k(B
+    // ループを利用して、1つのセキュリティグループ内のoutboundポリシーに処理を実行する
     if resp.SecurityGroups[i].IPPermissionsEgress != nil {
       for j := range resp.SecurityGroups[i].IPPermissionsEgress {
-        // $B%?!<%2%C%H$,(BIP$B%l%s%8$H%;%-%e%j%F%#%0%k!<%W$N$H$A$i$+%A%'%C%/!#(B
+        // ターゲットがIPレンジとセキュリティグループのとちらかチェック。
         if resp.SecurityGroups[i].IPPermissionsEgress[j].IPRanges != nil {
-          // $BAw?.85(BIP$B%"%I%l%9J,=hM}$r<B;\(B
+          // 送信元IPアドレス分処理を実施
           for k := range resp.SecurityGroups[i].IPPermissionsEgress[j].IPRanges {
             fmt.Print(*resp.SecurityGroups[i].GroupID + ",outbound,")
-            // $B%k!<%k$N>\:Y$r=PNO(B
+            // ルールの詳細を出力
             print_detail(resp.SecurityGroups[i].IPPermissionsEgress[j])
             fmt.Print(*resp.SecurityGroups[i].IPPermissionsEgress[j].IPRanges[k].CIDRIP + "\n")
           }
         } else {
-          // $BAw?.85%;%-%e%j%F%#%0%k!<%WJ,=hM}$r<B;\(B
+          // 送信元セキュリティグループ分処理を実施
           for k := range resp.SecurityGroups[i].IPPermissionsEgress[j].UserIDGroupPairs {
             fmt.Print(*resp.SecurityGroups[i].GroupID + ",outbound,")
-            // $B%k!<%k$N>\:Y$r=PNO(B
+            // ルールの詳細を出力
             print_detail(resp.SecurityGroups[i].IPPermissionsEgress[j])
             fmt.Print(*resp.SecurityGroups[i].IPPermissionsEgress[j].UserIDGroupPairs[k].GroupID + "\n")
           }
@@ -330,77 +330,77 @@ func print_detail (sg_rule ec2.IPPermission) {
       "tcp/8443":"HTTPS*(8443)",
    }
 
-   // API$B$N7k2L$K(BFromPort$B$,$"$k$+%A%'%C%/(B
+   // APIの結果にFromPortがあるかチェック
    if sg_rule.FromPort != nil {
      fromPort = *sg_rule.FromPort
    }
-   // API$B$N7k2L$K(BToPort$B$,$"$k$+%A%'%C%/(B
+   // APIの結果にToPortがあるかチェック
    if sg_rule.ToPort != nil {
      toPort = *sg_rule.ToPort
    }
 
-   // From$B$H(BTo$B$,F1$8$G$"$l$P!"=PNO$K(BFrom$B$rMxMQ$9$k!#$b$70c$&$J$i!"(BFrom-To$B$N7A<0$rMxMQ$9$k(B
+   // FromとToが同じであれば、出力にFromを利用する。もし違うなら、From-Toの形式を利用する
    if fromPort == toPort {
      portRange = strconv.Itoa(fromPort)
    } else {
      portRange = strconv.Itoa(fromPort) + "-" + strconv.Itoa(toPort)
    }
 
-   // PortRange$B$,(B0-65535$B$J$i!"=PNO$r(BALL$B$KJQ99!#(BIF$B$G$$$$$+$b!#(B
+   // PortRangeが0-65535なら、出力をALLに変更。IFでいいかも。
    switch portRange {
    case "0-65535":
      portRange = "ALL"
    }
 
-  // $B%W%m%H%3%k$4$H$K=hM}$rJQ99(B
+  // プロトコルごとに処理を変更
   switch *sg_rule.IPProtocol {
-  // ALL Traffic$B$N>l9g(B
+  // ALL Trafficの場合
   case "-1":
     fmt.Print(sg_type[*sg_rule.IPProtocol] + ",ALL,ALL,")
-  // TCP$B$N>l9g(B
+  // TCPの場合
   case "tcp":
-    // Type$B$r=PNO(B
+    // Typeを出力
     if sg_type[*sg_rule.IPProtocol + "/" + portRange] == "" {
       fmt.Print(sg_type[*sg_rule.IPProtocol] + ",")
     } else {
       fmt.Print(sg_type[*sg_rule.IPProtocol + "/" + portRange] + ",")
     }
-    // Protocol$B$r=PNO(B
+    // Protocolを出力
     fmt.Print("TCP(6),")
     fmt.Print(portRange +",")
-  // UDP$B$N>l9g(B
+  // UDPの場合
   case "udp":
-    // Type$B$r=PNO(B$
+    // Typeを出力$
     if sg_type[*sg_rule.IPProtocol + "/" + portRange] == "" {
       fmt.Print(sg_type[*sg_rule.IPProtocol] + ",")
     } else {
       fmt.Print(sg_type[*sg_rule.IPProtocol + "/" + portRange] + ",")
     }
-    // Protocol$B$r=PNO(B
+    // Protocolを出力
     fmt.Print("UDP(17),")
     fmt.Print(portRange +",")
-  // ICMP$B$N>l9g(B
+  // ICMPの場合
   case "icmp":
-    // Type$B$r=PNO(B$
+    // Typeを出力$
     if sg_type[*sg_rule.IPProtocol + "/" + portRange] == "" {
       fmt.Print(sg_type[*sg_rule.IPProtocol] + ",")
     } else {
       fmt.Print(sg_type[*sg_rule.IPProtocol + "/" + portRange] + ",")
     }
-    // Protocol$B$r=PNO(B
+    // Protocolを出力
     fmt.Print("ICMP(1),")
     fmt.Print(icmp_code[portRange] +",")
-  // custom protocol$B$N>l9g(B
+  // custom protocolの場合
   default:
-    // Type$B$r=PNO(B
+    // Typeを出力
     fmt.Print(sg_type["custom"] + ",")
-    // Protocol$B$r=PNO(B
+    // Protocolを出力
     if protocol[*sg_rule.IPProtocol] == "-" {
       fmt.Print(*sg_rule.IPProtocol + ",")
     } else {
       fmt.Print(protocol[*sg_rule.IPProtocol] + "(" + *sg_rule.IPProtocol + "),")
     }
-    // Protocol$B$r=PNO(B
+    // Protocolを出力
     fmt.Print("ALL,")
   }
 }
