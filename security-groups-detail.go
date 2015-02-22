@@ -2,7 +2,6 @@ package main
 
 import (
   "fmt"
-  "flag"
   "time"
   "net/http"
   "strconv"
@@ -11,25 +10,17 @@ import (
 )
 
 // メイン処理
-func main() {
-
-  var (
-    prefix = flag.String("p","default","credential's prefix")
-    region = flag.String("r","ap-northeast-1","region")
-  )
-
-  // コマンドラインからの入力をパース
-  flag.Parse()
+func SecurityGroupsDetail(prefix string,region string) {
 
   // ~/.aws/credentials からキーを取得
   duration := 60 * time.Second
-  creds, err := aws.ProfileCreds("",*prefix,duration)
+  creds, err := aws.ProfileCreds("",prefix,duration)
   if err != nil {
     fmt.Print("Error!! Please check ~/.aws/credentials")
   }
 
   // 取得したキーとコマンドラインからの入力を利用して、APIへ接続
-  cli := ec2.New(creds, *region, http.DefaultClient)
+  cli := ec2.New(creds, region, http.DefaultClient)
   // aws ec2 describe-security-grroupsを実行
   resp, err := cli.DescribeSecurityGroups(nil)
 
