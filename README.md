@@ -3,13 +3,17 @@ a2csv
 
 ## Description
 output the information of AWS in CSV format.
-At the moment, resources that are supported are as below.
 
-  - SecurityGroup(the Detailed rules of inbound and outbound)
+At the moment,the supported resources are as below.
+
+  - SecurityGroup ( the Detailed rules of inbound and outbound )
 
 ## Usage
 
-./a2csv securityGroups -r [region] -p [profile]
+```
+./a2csv -h
+./a2csv securityGroups -r [ region ] -p [ profile ]
+```
 
 ## Install
 git clone and go build. 
