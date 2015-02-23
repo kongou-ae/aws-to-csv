@@ -1,4 +1,4 @@
-a2csv
+aws-to-csv
 ====
 
 ## Description
