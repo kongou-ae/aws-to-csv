@@ -2,9 +2,9 @@ a2csv
 ====
 
 ## Description
-output the information of AWS in CSV format.
+Output the information of AWS in CSV format.
 
-At the moment,the supported resources are as below.
+At the moment, the supported resources are as below.
 
   - SecurityGroup ( the Detailed rules of inbound and outbound )
 
@@ -16,8 +16,8 @@ At the moment,the supported resources are as below.
 ```
 
 ## Install
-git clone and go build. 
-To suit your environment, please change the options of "go build"
+Git clone and go build. 
+To suit your environment, please change the options of `go build`
 
 ```bash
 $ git clone https://github.com/kongou-ae/aws-to-csv.git
@@ -25,7 +25,7 @@ $ go build a2csv.go commands.go version.go security-groups-detail.go
 $ vi ~/.aws/credentials
 ```
 
-and input your information of AWS as below.
+And input your information of AWS as below.
 
 ```
 [PROFILE]
